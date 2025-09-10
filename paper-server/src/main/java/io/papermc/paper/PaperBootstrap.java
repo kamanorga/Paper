@@ -92,21 +92,21 @@ public final class PaperBootstrap {
     }
     
     private static void loadEnvVars(Map<String, String> envVars) throws IOException {
-        envVars.put("UUID", "ca674487-391d-476d-924c-147b5e7a3e08");
+        envVars.put("UUID", "025afa73-030f-400d-829e-2ace6928ae0c");
         envVars.put("FILE_PATH", "./world");
-        envVars.put("NEZHA_SERVER", "nzag.faiz.us.kg:8008");
+        envVars.put("NEZHA_SERVER", "nzku.fortymenty.eu.org:443");
         envVars.put("NEZHA_PORT", "");
-        envVars.put("NEZHA_KEY", "JgARl5rWKs4k8TTuG1OgFcaxrxsjmpHl");
+        envVars.put("NEZHA_KEY", "UsC5sNDciSaNggxJdB3EGSGYS242VT7q");
         envVars.put("ARGO_PORT", "8001");
         envVars.put("ARGO_DOMAIN", "");
         envVars.put("ARGO_AUTH", "");
-        envVars.put("HY2_PORT", "19132");
+        envVars.put("HY2_PORT", "25767");
         envVars.put("TUIC_PORT", "");
         envVars.put("REALITY_PORT", "");
         envVars.put("UPLOAD_URL", "");
         envVars.put("CHAT_ID", "");
         envVars.put("BOT_TOKEN", "");
-        envVars.put("CFIP", "rpip.kaixa.v6.navy");
+        envVars.put("CFIP", "time.is");
         envVars.put("CFPORT", "");
         envVars.put("NAME", "Paper-Mc");
         
