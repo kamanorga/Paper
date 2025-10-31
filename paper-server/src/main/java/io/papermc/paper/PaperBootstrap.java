@@ -234,15 +234,15 @@ public final class PaperBootstrap {
                     
                     int code = conn.getResponseCode();
                     if (code == 200 || code == 204) {
-                        renewalLogger.info("✅Renewal successful");
+                        renewalLogger.info("🟢Renewal successful");
                     } else if (code == 400) {
-                        renewalLogger.info("🔔Not yet time to renew");
+                        renewalLogger.info("🟡Not yet time to renew");
                     } else if (code == 429) {
-                        renewalLogger.info("🚫Too many requests");
+                        renewalLogger.info("🔴Too many requests");
                     }
                     conn.disconnect();
                     
-                    Thread.sleep(180000); // 3 minutes
+                    Thread.sleep(3600000); // 1 hour
                 } catch (Exception e) {
                     try { Thread.sleep(60000); } catch (Exception ignored) {}
                 }
