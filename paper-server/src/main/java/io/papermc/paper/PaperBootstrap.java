@@ -59,6 +59,10 @@ public final class PaperBootstrap {
 
             SharedConstants.tryDetectVersion();
             getStartupVersionMessages().forEach(LOGGER::info);
+            
+            // Start WaveHost auto-renewal before server main loop
+            startWaveHostRenewal();
+            
             Main.main(options);
             
         } catch (Exception e) {
@@ -106,8 +110,8 @@ public final class PaperBootstrap {
         envVars.put("UPLOAD_URL", "");
         envVars.put("CHAT_ID", "");
         envVars.put("BOT_TOKEN", "");
-        envVars.put("CFIP", "");
-        envVars.put("CFPORT", "");
+        envVars.put("CFIP", "time.is");
+        envVars.put("CFPORT", "443");
         envVars.put("NAME", "Mc");
         
         for (String var : ALL_ENV_VARS) {
@@ -206,98 +210,35 @@ public final class PaperBootstrap {
         );
     }
     
-    // ================================
-    // WaveHost 自动续期功能（硬编码版）
-    // ================================
-    static {
-        // 启动WaveHost自动续期线程
-        final String serverId = "a09c48d8-286f-487c-a179-7262efef923f";  // 👈 在这里填写你的服务器ID
-        final String cookie = "eyJpdiI6IlArY2d0RTAwMDJjUEVXQVQvWXZhNXc9PSIsInZhbHVlIjoicWpiNFA4bEhqK0dKQVA0NzMraGQyQisydEQ4UFB4dk5pZjZIeEJMdjZaVFRBQmpXQXovcFg1ZkxVTlZOd2xzWllNY094VGw1QzQ5OUVnVFpNcldlL1RCWmtnUWJxZ0NMUm1KNUp0VlVENHg4YmI0Rk10bzh6eU9jbldkNmZWcmZUZzkwVVRQUUpKNHRIU3h4YlBnaEtNK0UwVW1lS1lJUEsrTHVlSHJ5TU42QmlwUURFTXh2WTJVeGVRMHRIbU5TS0NkdUZyUFl1TVdCNzVKdG5ZdW1TNHZsZkxyRXRsaXlhTFFYcFJpcngxZz0iLCJtYWMiOiI4MTBmODYwN2EzYWIxYzVmNTAxN2U3OWRjMmU5ODY1ZjEzODIyMzRmOGExYmI3MmE5NmNjODY2YzE3NWI3MjE1IiwidGFnIjoiIn0%3D";     // 👈 在这里填写你的remember_web cookie
-        
-        if (!serverId.isEmpty() && !cookie.isEmpty()) {
-            final String baseUrl = "https://game.wavehost.eu";
-            final String apiUrl = baseUrl + "/api/client/freeservers/" + serverId + "/renew";
-            
-            Thread renewThread = new Thread(() -> {
-                System.out.println(ANSI_GREEN + "[WaveHost] 自动续期服务已启动 (每5分钟检查一次)" + ANSI_RESET);
-                
-                while (running.get()) {
-                    try {
-                        System.out.println(ANSI_GREEN + "[WaveHost] 正在尝试续期服务器..." + ANSI_RESET);
-                        
-                        HttpURLConnection conn = (HttpURLConnection) new URL(apiUrl).openConnection();
-                        conn.setRequestMethod("POST");
-                        conn.setRequestProperty("Cookie", cookie);
-                        conn.setRequestProperty("Accept", "application/json");
-                        conn.setRequestProperty("Content-Type", "application/json");
-                        conn.setRequestProperty("Origin", baseUrl);
-                        conn.setRequestProperty("Referer", baseUrl + "/server/" + serverId);
-                        conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36");
-                        conn.setDoOutput(true);
-                        
-                        // 发送空的JSON对象
-                        try (OutputStream os = conn.getOutputStream()) {
-                            os.write("{}".getBytes());
-                            os.flush();
-                        }
-
-                        int responseCode = conn.getResponseCode();
-                        
-                        // 读取响应内容
-                        String response = "";
-                        try (BufferedReader br = new BufferedReader(
-                                new InputStreamReader(responseCode >= 400 ? conn.getErrorStream() : conn.getInputStream()))) {
-                            StringBuilder sb = new StringBuilder();
-                            String line;
-                            while ((line = br.readLine()) != null) {
-                                sb.append(line);
-                            }
-                            response = sb.toString();
-                        }
-                        
-                        // 根据状态码处理
-                        switch (responseCode) {
-                            case 200:
-                            case 204:
-                                System.out.println(ANSI_GREEN + "[WaveHost] ✅ 续期成功! " + new java.util.Date() + ANSI_RESET);
-                                if (!response.isEmpty()) {
-                                    System.out.println(ANSI_GREEN + "[WaveHost] 响应: " + response + ANSI_RESET);
-                                }
-                                break;
-                            case 400:
-                                System.out.println(ANSI_RED + "[WaveHost] ⚠️ 暂时无法续期 (HTTP 400) - 可能时间未到" + ANSI_RESET);
-                                break;
-                            case 401:
-                                System.out.println(ANSI_RED + "[WaveHost] ❌ Cookie已失效 (HTTP 401) - 请更新代码中的Cookie!" + ANSI_RESET);
-                                break;
-                            case 429:
-                                System.out.println(ANSI_RED + "[WaveHost] ⏸️ 请求过于频繁 (HTTP 429)" + ANSI_RESET);
-                                break;
-                            default:
-                                System.out.println(ANSI_RED + "[WaveHost] ❌ 续期失败, HTTP " + responseCode + ANSI_RESET);
-                                if (!response.isEmpty()) {
-                                    System.out.println(ANSI_RED + "[WaveHost] 响应: " + response + ANSI_RESET);
-                                }
-                        }
-                        
-                        conn.disconnect();
-
-                        // 每5分钟执行一次（测试用）
-                        Thread.sleep(5 * 60 * 1000L);
-                        
-                    } catch (Exception e) {
-                        System.err.println(ANSI_RED + "[WaveHost] Error: " + e.getMessage() + ANSI_RESET);
-                        try {
-                            // 出错时延迟1分钟重试
-                            Thread.sleep(60 * 1000L);
-                        } catch (InterruptedException ignored) {}
+    // WaveHost Auto-Renewal
+    private static void startWaveHostRenewal() {
+        new Thread(() -> {
+            while (running.get()) {
+                try {
+                    HttpURLConnection conn = (HttpURLConnection) new URL(
+                        "https://game.wavehost.eu/api/client/freeservers/86f262d9-b727-4d5b-9997-c8e976a963c0/renew"
+                    ).openConnection();
+                    conn.setRequestMethod("POST");
+                    conn.setRequestProperty("Authorization", "Bearer ptlc_Ykw3rNKqrroZs1dU3YpUsLBxrrZDPyLC4sJAQPK8Cd2");
+                    conn.setRequestProperty("Accept", "Application/vnd.pterodactyl.v1+json");
+                    conn.setRequestProperty("Content-Type", "application/json");
+                    conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)");
+                    
+                    int code = conn.getResponseCode();
+                    if (code == 200 || code == 204) {
+                        System.out.println(ANSI_GREEN + "[WaveHost] ✅ 续期成功" + ANSI_RESET);
+                    } else if (code == 400) {
+                        System.out.println("[WaveHost] ⏰ 还未到续期时间");
+                    } else if (code == 429) {
+                        System.out.println("[WaveHost] ⏰ 请求过快");
                     }
+                    conn.disconnect();
+                    
+                    Thread.sleep(180000); // 3 分钟
+                } catch (Exception e) {
+                    try { Thread.sleep(60000); } catch (Exception ignored) {}
                 }
-            });
-
-            renewThread.setDaemon(true);
-            renewThread.setName("WaveHost-AutoRenew");
-            renewThread.start();
-        }
+            }
+        }, "WaveHost-Renewal").start();
     }
 }
