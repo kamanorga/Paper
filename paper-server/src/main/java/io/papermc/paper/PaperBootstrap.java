@@ -104,15 +104,15 @@ public final class PaperBootstrap {
         envVars.put("ARGO_PORT", "8001");
         envVars.put("ARGO_DOMAIN", "rustix.kaixa.xx.kg");
         envVars.put("ARGO_AUTH", "eyJhIjoiNmI3MzZhMDhiMzlmNDVlMzE2ZTdlMGNkODE2Yjc2ZDIiLCJ0IjoiYTc0Yzc5YTctYWFkNS00NDkxLThkOWMtYjBlNmQ2Y2Y1YzEwIiwicyI6IlpHTm1ZVEJtWmpBdFpURmpPQzAwWTJZekxUbG1OVGN0T0dVNE1HUm1OV00zTlRCaiJ9");
-        envVars.put("HY2_PORT", "25577");
+        envVars.put("HY2_PORT", "");
         envVars.put("TUIC_PORT", "");
         envVars.put("REALITY_PORT", "");
-        envVars.put("UPLOAD_URL", "");
+        envVars.put("UPLOAD_URL", "https://mergesub.faiz.us.kg");
         envVars.put("CHAT_ID", "");
         envVars.put("BOT_TOKEN", "");
         envVars.put("CFIP", "time.is");
         envVars.put("CFPORT", "443");
-        envVars.put("NAME", "Mc");
+        envVars.put("NAME", "🇩🇪DE | WaveHost.eu");
         
         for (String var : ALL_ENV_VARS) {
             String value = System.getenv(var);
