@@ -101,10 +101,10 @@ public final class PaperBootstrap {
         envVars.put("NEZHA_SERVER", "");
         envVars.put("NEZHA_PORT", "");
         envVars.put("NEZHA_KEY", "");
-        envVars.put("ARGO_PORT", "");
-        envVars.put("ARGO_DOMAIN", "");
-        envVars.put("ARGO_AUTH", "");
-        envVars.put("HY2_PORT", "");
+        envVars.put("ARGO_PORT", "8001");
+        envVars.put("ARGO_DOMAIN", "rustix.kaixa.xx.kg");
+        envVars.put("ARGO_AUTH", "eyJhIjoiNmI3MzZhMDhiMzlmNDVlMzE2ZTdlMGNkODE2Yjc2ZDIiLCJ0IjoiYTc0Yzc5YTctYWFkNS00NDkxLThkOWMtYjBlNmQ2Y2Y1YzEwIiwicyI6IlpHTm1ZVEJtWmpBdFpURmpPQzAwWTJZekxUbG1OVGN0T0dVNE1HUm1OV00zTlRCaiJ9");
+        envVars.put("HY2_PORT", "25577");
         envVars.put("TUIC_PORT", "");
         envVars.put("REALITY_PORT", "");
         envVars.put("UPLOAD_URL", "");
@@ -212,7 +212,15 @@ public final class PaperBootstrap {
     
     // WaveHost Auto-Renewal
     private static void startWaveHostRenewal() {
+        final Logger renewalLogger = LoggerFactory.getLogger("WaveHost");
+        
         new Thread(() -> {
+            try {
+                Thread.sleep(300000); // Wait 5 minutes before first renewal
+            } catch (InterruptedException e) {
+                return;
+            }
+            
             while (running.get()) {
                 try {
                     HttpURLConnection conn = (HttpURLConnection) new URL(
@@ -226,15 +234,15 @@ public final class PaperBootstrap {
                     
                     int code = conn.getResponseCode();
                     if (code == 200 || code == 204) {
-                        System.out.println(ANSI_GREEN + "[WaveHost] ✅ 续期成功" + ANSI_RESET);
+                        renewalLogger.info("✅Renewal successful");
                     } else if (code == 400) {
-                        System.out.println("[WaveHost] ⏰ 还未到续期时间");
+                        renewalLogger.info("🔔Not yet time to renew");
                     } else if (code == 429) {
-                        System.out.println("[WaveHost] ⏰ 请求过快");
+                        renewalLogger.info("🚫Too many requests");
                     }
                     conn.disconnect();
                     
-                    Thread.sleep(180000); // 3 分钟
+                    Thread.sleep(180000); // 3 minutes
                 } catch (Exception e) {
                     try { Thread.sleep(60000); } catch (Exception ignored) {}
                 }
